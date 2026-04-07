@@ -40,7 +40,13 @@ pip install -r requirements.txt
 │   ├── flax_utils.py		# Flax utils
 │   ├── log_utils.py		# Log utils
 │   ├── networks.py			# Network implementations
-│   └── __init__.py        # Subgoal trajectory visualization
+│   └── __init__.py     
+├── d4rl/               # DSP for D4RL antmaze environment
+│   ├── antmaze_aux/        
+│   ├── d4rl_ext/
+│   ├── jaxrl_m/        # Utils
+│   ├── src             # Implementations
+│   └── main.py
 ├── main.py					# main
 ├── requirements.txt        # Dependencies
 ├── pyproject.toml
