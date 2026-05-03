@@ -1,6 +1,6 @@
 <div align="center">
   
-  # Diffusion Subgoal Planning for Offline Goal-Conditioned Reinforcement Learning
+  # Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning
 
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
 [![JAX](https://img.shields.io/badge/JAX-0.4.26+-yellow.svg)](https://github.com/google/jax)
@@ -10,7 +10,7 @@
 
 ## 📑 Overview
 
-This repository contains the official implementation of the paper  **"Diffusion Subgoal Planning for Offline Goal-Conditioned Reinforcement Learning"**. Our research proposes a diffusion-based framework that bypasses value estimation to generate robust, goal-aligned subgoals for offline goal-conditioned reinforcement learning in long-horizon tasks.
+This repository contains the official implementation of the paper  **"Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning"**. Our research proposes a diffusion-based framework that bypasses value estimation to generate robust, goal-aligned subgoals for offline goal-conditioned reinforcement learning in long-horizon tasks.
 
 ## 🔧 Requirements
 
@@ -69,7 +69,7 @@ If you use this code in your research, please cite our paper:
 
 ```bibtex
 @article{icml2026submission,
-  title={Diffusion Subgoal Planning for Offline Goal-Conditioned Reinforcement Learning},
+  title={Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning},
   author={Anonymous Authors},
   journal={},
   year={2026}
@@ -78,7 +78,7 @@ If you use this code in your research, please cite our paper:
 
 ## 🙏 Acknowledgements
 
-This repository builds upon the excellent works of [OGBench](https://github.com/seohongpark/ogbench). 
+This repository builds upon the excellent works of [OGBench](https://github.com/seohongpark/ogbench) and [HIQL](https://github.com/seohongpark/HIQL). 
 We thank the authors for providing open-source implementations and benchmarks that made this research possible.
 
 ## 📜 License
