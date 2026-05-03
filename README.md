@@ -68,7 +68,7 @@ python main.py --agent=agents/dsp.py --env_name=antmaze-medium-navigate-v0 --age
 If you use this code in your research, please cite our paper:
 
 ```bibtex
-@article{icml2026submission,
+@article{neurips2026submission,
   title={Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning},
   author={Anonymous Authors},
   journal={},
