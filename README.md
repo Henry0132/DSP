@@ -57,10 +57,16 @@ pip install -r requirements.txt
 
 Please note that we **do not provide the entire baseline methods** here.
 
-Run the following command to reproduce our method: 
+Run the following command to reproduce our method (OGBench):
 
 ```bash
 python main.py --agent=agents/dsp.py --env_name=antmaze-medium-navigate-v0 --agent.expectile=0.7 --agent.low_alpha=3.0 --agent.cfg=3.0 --agent.actor_p_curgoal=0.0 --agent.actor_p_trajgoal=1.0 --agent.actor_p_randomgoal=0.0
+```
+
+Run the following command to reproduce our method (D4RL):
+
+```bash
+python main.py --run_group EXP --seed 0 --env_name antmaze-large-diverse-v2 --algo_name dsp --use_waypoints 1 --way_steps 25 --pretrain_steps 1000000 --log_interval 100000 --eval_interval 100000 --save_interval 100000 --eval_episodes 100
 ```
 
 ## 📝 Citation
