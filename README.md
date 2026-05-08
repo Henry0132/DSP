@@ -10,9 +10,7 @@
 
 ## 📑 Overview
 
-This repository provides the implementation of **"Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning"**.
-
-DSP is a diffusion-based hierarchical framework for offline goal-conditioned reinforcement learning. It replaces explicit value-based guidance in high-level subgoal generation with guided generative sampling, while retaining a value-trained low-level executor. By learning both conditional and unconditional subgoal flows, DSP uses classifier-free guidance at inference time to generate data-supported, goal-directed subgoals for long-horizon tasks.
+This repository provides the implementation of **"Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning"**. DSP is a diffusion-based framework for high-level subgoal generation in offline goal-conditioned reinforcement learning. Instead of explicitly selecting subgoals through high-level value estimates, DSP uses classifier-free guidance over learned conditional and unconditional subgoal flows to generate data-supported, goal-directed subgoals in long-horizon tasks.
 
 ## 🔧 Requirements
 
