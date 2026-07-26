@@ -286,14 +286,28 @@ class DSPAgent(flax.struct.PyTreeNode):
                 gc_encoder=low_actor_encoder_def,
             )
         
+        
+        ex_goal_reps = jnp.zeros(
+            (*ex_actions.shape[:-1], goal_dim),
+            dtype=jnp.float32,
+        )
+
         network_info = dict(
             goal_rep=(goal_rep_def, (jnp.concatenate([ex_observations, ex_goals], axis=-1))),
             value=(value_def, (ex_observations, ex_goals)),
             target_value=(target_value_def, (ex_observations, ex_goals)),
-            high_actor_flow=(high_actor_flow_def, (ex_observations, ex_goals, ex_times, ex_goals)),
+            high_actor_flow=(
+                high_actor_flow_def,
+                (ex_observations, ex_goal_reps, ex_times, ex_goal_reps),
+            ),
             high_unc_embed=(high_unc_embed_def, ()),
             low_actor=(low_actor_def, (ex_observations, ex_goals)),
         )
+        if high_actor_encoder_def is not None:
+            network_info['high_actor_flow_encoder'] = (
+                high_actor_encoder_def,
+                (ex_observations,),
+            )
 
         networks = {k: v[0] for k, v in network_info.items()}
         network_args = {k: v[1] for k, v in network_info.items()}
