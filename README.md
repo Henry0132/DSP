@@ -55,6 +55,8 @@ pip install -r requirements.txt
 
 ## ⚙️  Training and Evaluation
 
+### OGBench
+
 Please note that we **do not provide the entire baseline methods** here.
 
 Run the following command to reproduce our method (OGBench):
@@ -62,6 +64,14 @@ Run the following command to reproduce our method (OGBench):
 ```bash
 python main.py --agent=agents/dsp.py --env_name=antmaze-medium-navigate-v0 --agent.expectile=0.7 --agent.low_alpha=3.0 --agent.cfg=3.0 --agent.actor_p_curgoal=0.0 --agent.actor_p_trajgoal=1.0 --agent.actor_p_randomgoal=0.0
 ```
+
+If you want reproduce our method in visual datasets, please run following command:
+
+```bash
+python main.py --agent=agents/dsp.py --env_name=visual-antmaze-large-navigate-v0 --agent.batch_size=256 --agent.expectile=0.7 --agent.low_alpha=3.0 --agent.cfg=3.0 --agent.actor_p_curgoal=0.0 --agent.actor_p_trajgoal=1.0 --agent.actor_p_randomgoal=0.0 --agent.low_actor_rep_grad=True --agent.p_aug=0
+```
+
+### D4RL-Antmaze
 
 Run the following command to reproduce our method (D4RL):
 
