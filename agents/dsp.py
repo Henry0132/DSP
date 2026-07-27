@@ -68,7 +68,28 @@ class DSPAgent(flax.struct.PyTreeNode):
         exp_a = jnp.exp(adv * self.config['low_alpha'])
         exp_a = jnp.minimum(exp_a, 100.0)
 
-        dist = self.network.select('low_actor')(batch['observations'], batch['low_actor_goals'], params=grad_params)
+        if self.config['encoder'] is not None:
+            goal_reps = self.network.select('goal_rep')(
+                jnp.concatenate(
+                    [batch['observations'], batch['low_actor_goals']],
+                    axis=-1,
+                ),
+                params=grad_params,
+            )
+            if not self.config['low_actor_rep_grad']:
+                goal_reps = jax.lax.stop_gradient(goal_reps)
+            dist = self.network.select('low_actor')(
+                batch['observations'],
+                goal_reps,
+                goal_encoded=True,
+                params=grad_params,
+            )
+        else:
+            dist = self.network.select('low_actor')(
+                batch['observations'],
+                batch['low_actor_goals'],
+                params=grad_params,
+            )
         log_prob = dist.log_prob(batch['actions'])
         actor_loss = -(exp_a * log_prob).mean()
 
@@ -88,20 +109,54 @@ class DSPAgent(flax.struct.PyTreeNode):
 
     def high_actor_loss(self, batch, grad_params, rng=None):
         """Compute the high-level flow BC loss."""
-        batch_size, action_dim = batch['high_actor_actions'].shape  # in our methods, 'high_actor_actions' is waypoints
+        if self.config['encoder'] is not None:
+            x_1 = self.network.select('goal_rep')(
+                jnp.concatenate(
+                    [batch['observations'], batch['high_actor_actions']],
+                    axis=-1,
+                )
+            )
+            x_1 = jax.lax.stop_gradient(x_1)
+            conditional_goals = self.network.select('goal_rep')(
+                jnp.concatenate(
+                    [batch['observations'], batch['high_actor_goals']],
+                    axis=-1,
+                ),
+                params=grad_params,
+            )
+        else:
+            x_1 = batch['high_actor_actions']
+            conditional_goals = batch['high_actor_goals']
+
+        batch_size, action_dim = x_1.shape
         x_rng, t_rng, cfg_rng = jax.random.split(rng, 3)
 
         x_0 = jax.random.normal(x_rng, (batch_size, action_dim))
-        x_1 = batch['high_actor_actions']
         t = jax.random.uniform(t_rng, (batch_size, 1))
         x_t = (1 - t) * x_0 + t * x_1
         y = x_1 - x_0
 
-        unc_embed = self.network.select('high_unc_embed')(params=grad_params)
-        do_cfg = jax.random.bernoulli(cfg_rng, p=0.1, shape=(batch_size,))
-        goals = jnp.where(do_cfg[:, None], unc_embed, batch['high_actor_goals'])
+        unc_embed = self.network.select('high_unc_embed')(
+            params=grad_params
+        )
+        do_cfg = jax.random.bernoulli(
+            cfg_rng,
+            p=0.1,
+            shape=(batch_size,),
+        )
+        goals = jnp.where(
+            do_cfg[:, None],
+            unc_embed,
+            conditional_goals,
+        )
 
-        pred = self.network.select('high_actor_flow')(batch['observations'], x_t, t, goals, params=grad_params)
+        pred = self.network.select('high_actor_flow')(
+            batch['observations'],
+            x_t,
+            t,
+            goals,
+            params=grad_params,
+        )
         actor_loss = jnp.mean((pred - y) ** 2)
 
         actor_info = {
@@ -167,25 +222,115 @@ class DSPAgent(flax.struct.PyTreeNode):
         It first queries the high-level actor to obtain subgoal representations, and then queries the low-level actor
         to obtain raw actions.
         """
+        if self.config['encoder'] is not None:
+            high_seed, low_seed = jax.random.split(seed)
+            encoded_observations = self.network.select(
+                'high_actor_flow_encoder'
+            )(observations)
+            goal_reps = self.network.select('goal_rep')(
+                jnp.concatenate([observations, goals], axis=-1)
+            )
+
+            subgoals = jax.random.normal(
+                high_seed,
+                (self.config['num_samples'], self.config['goal_dim']),
+            )
+            repeated_observations = jnp.repeat(
+                encoded_observations[None],
+                self.config['num_samples'],
+                axis=0,
+            )
+            repeated_goals = jnp.repeat(
+                goal_reps[None],
+                self.config['num_samples'],
+                axis=0,
+            )
+            unconditional_goals = jnp.broadcast_to(
+                self.network.select('high_unc_embed')(),
+                repeated_goals.shape,
+            )
+
+            for i in range(self.config['flow_steps']):
+                t = jnp.full(
+                    (self.config['num_samples'], 1),
+                    i / self.config['flow_steps'],
+                )
+                unc_vels = self.network.select('high_actor_flow')(
+                    repeated_observations,
+                    subgoals,
+                    t,
+                    unconditional_goals,
+                    is_encoded=True,
+                )
+                cond_vels = self.network.select('high_actor_flow')(
+                    repeated_observations,
+                    subgoals,
+                    t,
+                    repeated_goals,
+                    is_encoded=True,
+                )
+                subgoals = subgoals + (
+                    unc_vels
+                    + self.config['cfg'] * (cond_vels - unc_vels)
+                ) / self.config['flow_steps']
+
+            subgoal = subgoals[
+                jax.random.randint(
+                    low_seed,
+                    (),
+                    0,
+                    self.config['num_samples'],
+                )
+            ]
+            subgoal = subgoal / jnp.maximum(
+                jnp.linalg.norm(subgoal),
+                1e-6,
+            ) * jnp.sqrt(subgoal.shape[-1])
+
+            low_dist = self.network.select('low_actor')(
+                observations,
+                subgoal,
+                goal_encoded=True,
+                temperature=temperature,
+            )
+            actions = low_dist.sample(seed=low_seed)
+            if not self.config['discrete']:
+                actions = jnp.clip(actions, -1, 1)
+            return actions, subgoal
+
         high_seed, low_seed = jax.random.split(seed)
 
-        subgoals = jax.random.normal(high_seed, (*observations.shape[:-1], self.config['goal_dim']))
-        high_unc_embed = self.network.select('high_unc_embed')()[0]
+        subgoals = jax.random.normal(               # [M, goal_dim]
+            high_seed,
+            (
+                *observations.shape[:-1],
+                self.config['num_samples'],
+                self.config['goal_dim']
+            ),
+        )
+        n_observations = jnp.repeat(jnp.expand_dims(observations, 0), self.config['num_samples'], axis=0)   # [M, state_dim]
+        n_goals = jnp.repeat(jnp.expand_dims(goals, 0), self.config['num_samples'], axis=0)     # [M, goal_dim]
+        
+        high_unc_embed = self.network.select('high_unc_embed')()
+        n_high_unc_embed = jnp.repeat(high_unc_embed, self.config['num_samples'], axis=0)   # (M, goal_dim)
+
         for i in range(self.config['flow_steps']):
-            t = jnp.full((*observations.shape[:-1], 1), i / self.config['flow_steps'])
-            unc_vels = self.network.select('high_actor_flow')(observations, subgoals, t, high_unc_embed)
-            cond_vels = self.network.select('high_actor_flow')(observations, subgoals, t, goals)
+            t = jnp.full((self.config['num_samples'], 1), i / self.config['flow_steps'])
+
+            unc_vels = self.network.select('high_actor_flow')(n_observations, subgoals, t, n_high_unc_embed)
+            cond_vels = self.network.select('high_actor_flow')(n_observations, subgoals, t, n_goals)
             # cfg
             vels = unc_vels + self.config['cfg'] * (cond_vels - unc_vels)
-
             subgoals = subgoals + vels / self.config['flow_steps']
 
-        low_dist = self.network.select('low_actor')(observations, subgoals, temperature=temperature)
+        subgoal = subgoals[jax.random.randint(low_seed, (), 0, self.config['num_samples'])]  # [goal_dim]
+
+        low_dist = self.network.select('low_actor')(observations, subgoal, temperature=temperature)
         actions = low_dist.sample(seed=low_seed)
 
         if not self.config['discrete']:
             actions = jnp.clip(actions, -1, 1)
-        return actions
+        return actions, subgoal
 
 
     @classmethod
@@ -223,9 +368,13 @@ class DSPAgent(flax.struct.PyTreeNode):
         encoders = dict()
         if config['encoder'] is not None:
             encoder_module = encoder_modules[config['encoder']]
-            raise NotImplementedError
+            goal_rep_seq = [encoder_module()]
+            goal_dim = config['rep_dim']
+            high_actor_encoder_def = encoder_module()
         else:
             goal_rep_seq = []
+            goal_dim = ex_goals.shape[-1]
+            high_actor_encoder_def = None
         goal_rep_seq.append(
             MLP(
                 hidden_dims=(*config['value_hidden_dims'], config['rep_dim']),
@@ -242,8 +391,6 @@ class DSPAgent(flax.struct.PyTreeNode):
             target_value_encoder_def = GCEncoder(state_encoder=encoder_module(), concat_encoder=goal_rep_def)
             # Low-level actor: pi^l(. | encoder^l(s), phi([s; w]))
             low_actor_encoder_def = GCEncoder(state_encoder=encoder_module(), concat_encoder=goal_rep_def)
-            # High-level actor: pi^h(. | encoder^h([s; g]))
-            high_actor_encoder_def = GCEncoder(concat_encoder=encoder_module())
         else:
             # Value: V(s, phi([s; g]))
             value_encoder_def = GCEncoder(state_encoder=Identity(), concat_encoder=goal_rep_def)
@@ -253,7 +400,6 @@ class DSPAgent(flax.struct.PyTreeNode):
             # High-level actor: pi^h(. | s, g) (i.e., no encoder)
             high_actor_encoder_def = None
 
-
         # Define networks.
         value_def = GCValue(
             hidden_dims=config['value_hidden_dims'],
@@ -261,6 +407,7 @@ class DSPAgent(flax.struct.PyTreeNode):
             ensemble=True,
             gc_encoder=value_encoder_def,
         )
+
         target_value_def = GCValue(
             hidden_dims=config['value_hidden_dims'],
             layer_norm=config['layer_norm'],
@@ -272,12 +419,14 @@ class DSPAgent(flax.struct.PyTreeNode):
             hidden_dims=config['high_actor_hidden_dims'],
             state_dim=goal_dim,
             layer_norm=config['actor_layer_norm'],
+            encoder=high_actor_encoder_def,
+            encode_goal=config['encoder'] is None,
         )
 
         high_unc_embed_def = UnconditionalEmbedding(
             goal_dim=goal_dim,
         )
-
+ 
         low_actor_def = GCActor(
                 hidden_dims=config['low_actor_hidden_dims'],
                 action_dim=action_dim,
@@ -285,7 +434,6 @@ class DSPAgent(flax.struct.PyTreeNode):
                 const_std=config['const_std'],
                 gc_encoder=low_actor_encoder_def,
             )
-        
         
         ex_goal_reps = jnp.zeros(
             (*ex_actions.shape[:-1], goal_dim),
@@ -317,6 +465,9 @@ class DSPAgent(flax.struct.PyTreeNode):
         network_params = network_def.init(init_rng, **network_args)['params']
         network = TrainState.create(network_def, network_params, tx=network_tx)
 
+        params = network.params
+        params['modules_target_value'] = params['modules_value']
+
         config['ob_dim'] = ob_dim
         config['action_dim'] = action_dim
         config['goal_dim'] = goal_dim
@@ -335,7 +486,7 @@ def get_config():
             low_actor_hidden_dims=(512, 512, 512),  # Low actor network hidden dimensions.
             value_hidden_dims=(512, 512, 512),  # Value network hidden dimensions.
             layer_norm=True,  # Whether to use layer normalization for the actor.
-            actor_layer_norm=False,  # Whether to use layer normalization for the actor.
+            actor_layer_norm=True,  # Whether to use layer normalization for the actor.
             discount=0.99,  # Discount factor (unused by default; can be used for geometric goal sampling in GCDataset).
             tau=0.005,  # Target network update rate.
             expectile=0.7,  # IQL expectile.
@@ -345,7 +496,8 @@ def get_config():
             const_std=True,  # Whether to use constant standard deviation for the actors.
             discrete=False,  # Whether the action space is discrete.
             flow_steps=20,  # Number of flow steps.
-            cfg=5.0,  # CFG coefficient.
+            cfg=3.0,  # CFG coefficient.
+            num_samples=32,  # Number of action samples for evaluation.
             encoder=ml_collections.config_dict.placeholder(str),  # Visual encoder name (None, 'impala_small', etc.).
             ob_dim=ml_collections.config_dict.placeholder(int),  # Observation dimension (will be set automatically).
             action_dim=ml_collections.config_dict.placeholder(int),  # Action dimension (will be set automatically).
