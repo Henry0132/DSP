@@ -417,7 +417,7 @@ class GCMRNValue(nn.Module):
     layer_norm: bool = True
     encoder: nn.Module = None
 
-    def setup(self):
+    def setup(self) -> None:
         self.phi = MLP((*self.hidden_dims, self.latent_dim), activate_final=False, layer_norm=self.layer_norm)
 
     def __call__(self, observations, goals, is_phi=False, info=False):
@@ -432,10 +432,11 @@ class GCMRNValue(nn.Module):
         if is_phi:
             phi_s = observations
             phi_g = goals
+
         else:
             if self.encoder is not None:
-                observations = self.encoder(observations)
-                goals = self.encoder(goals)
+                observations, goals = self.encoder(observations, goals)
+
             phi_s = self.phi(observations)
             phi_g = self.phi(goals)
 
@@ -452,6 +453,54 @@ class GCMRNValue(nn.Module):
         else:
             return v
 
+class GCMValue(nn.Module):
+    """Metric value function.
+
+    This module computes the value function as the sum of a symmetric Euclidean distance and an asymmetric
+    L^infinity-based quasimetric.
+
+    Attributes:
+        hidden_dims: Hidden layer dimensions.
+        latent_dim: Latent dimension.
+        layer_norm: Whether to apply layer normalization.
+        encoder: Optional state/goal encoder.
+    """
+
+    hidden_dims: Sequence[int]
+    latent_dim: int
+    layer_norm: bool = True
+    encoder: nn.Module = None
+
+    def setup(self) -> None:
+        self.phi = MLP((*self.hidden_dims, self.latent_dim), activate_final=False, layer_norm=self.layer_norm)
+
+    def __call__(self, observations, goals, is_phi=False, info=False):
+        """Return the MRN value function.
+
+        Args:
+            observations: Observations.
+            goals: Goals.
+            is_phi: Whether the inputs are already encoded by phi.
+            info: Whether to additionally return the representations phi_s and phi_g.
+        """
+        if is_phi:
+            phi_s = observations
+            phi_g = goals
+
+        else:
+            if self.encoder is not None:
+                observations, goals = self.encoder(observations, goals)
+
+            phi_s = self.phi(observations)
+            phi_g = self.phi(goals)
+
+        squared_dist = ((phi_s - phi_g) ** 2).sum(axis=-1)
+        v = jnp.sqrt(jnp.maximum(squared_dist, 1e-12))
+
+        if info:
+            return v, phi_s, phi_g
+        else:
+            return v
 
 class GCIQEValue(nn.Module):
     """Interval quasimetric embedding (IQE) value function.
@@ -561,12 +610,103 @@ class GCStatePlannerVectorField(nn.Module):
     state_dim: int
     layer_norm: bool = False
     encoder: nn.Module = None
+    encode_goal: bool = True
 
     def setup(self):
         self.mlp = MLP((*self.hidden_dims, self.state_dim), activate_final=False, layer_norm=self.layer_norm)
     
     @nn.compact
     def __call__(self, current_state, waypoints, times, goal=None, is_encoded=False):
+        if self.encoder is not None and not is_encoded:
+            current_state = self.encoder(current_state)
+            if goal is not None and self.encode_goal:
+                goal = self.encoder(goal)
+
+        if goal is None:
+            inputs = jnp.concatenate([current_state, waypoints, times], axis=-1)
+        else:
+            inputs = jnp.concatenate([current_state, goal, waypoints, times], axis=-1)
+
+        v = self.mlp(inputs)
+        return v
+
+
+class GCActorDrift(nn.Module):
+    """Actor drift network with the same ABI as `GCActorVectorField`.
+
+    In the current rectified-flow / flow-matching setup, the learned ODE drift
+    has the same shape and conditioning interface as the vector field. Keeping
+    the parameter names aligned makes it easy to swap this module into an agent
+    under the same `ModuleDict` key.
+    """
+
+    hidden_dims: Sequence[int]
+    action_dim: int
+    layer_norm: bool = False
+    encoder: nn.Module = None
+
+    def setup(self) -> None:
+        self.mlp = MLP((*self.hidden_dims, self.action_dim), activate_final=False, layer_norm=self.layer_norm)
+
+    @nn.compact
+    def __call__(self, observations, actions, times, goals=None, is_encoded=False):
+        """Return the drift at the given states, actions, times, and goals."""
+        if self.encoder is not None and not is_encoded:
+            observations = self.encoder(observations)
+
+        if goals is None:
+            inputs = jnp.concatenate([observations, actions, times], axis=-1)
+        else:
+            inputs = jnp.concatenate([observations, goals, actions, times], axis=-1)
+
+        drift = self.mlp(inputs)
+        return drift
+
+
+class GCActorDriftingPolicy(nn.Module):
+    """One-step goal-conditioned generator for drifting policies."""
+
+    hidden_dims: Sequence[int]
+    action_dim: int
+    layer_norm: bool = False
+    encoder: nn.Module = None
+
+    def setup(self) -> None:
+        self.mlp = MLP((*self.hidden_dims, self.action_dim), activate_final=False, layer_norm=self.layer_norm)
+
+    @nn.compact
+    def __call__(self, observations, noises, goals=None, cfg_scales=None, is_encoded=False):
+        """Return one-step generated actions from noise and conditioning."""
+        if self.encoder is not None and not is_encoded:
+            observations = self.encoder(observations)
+
+        inputs = [observations]
+        if goals is not None:
+            inputs.append(goals)
+        inputs.append(noises)
+        if cfg_scales is not None:
+            if jnp.ndim(cfg_scales) == jnp.ndim(noises) - 1:
+                cfg_scales = jnp.expand_dims(cfg_scales, axis=-1)
+            inputs.append(cfg_scales)
+
+        actions = self.mlp(jnp.concatenate(inputs, axis=-1))
+        return actions
+
+
+class GCStatePlannerDrift(nn.Module):
+    """State planner drift network aligned with `GCStatePlannerVectorField`."""
+
+    hidden_dims: Sequence[int]
+    state_dim: int
+    layer_norm: bool = False
+    encoder: nn.Module = None
+
+    def setup(self):
+        self.mlp = MLP((*self.hidden_dims, self.state_dim), activate_final=False, layer_norm=self.layer_norm)
+
+    @nn.compact
+    def __call__(self, current_state, waypoints, times, goal=None, is_encoded=False):
+        """Return the waypoint-space drift for hierarchical planning."""
         if self.encoder is not None and not is_encoded:
             current_state = self.encoder(current_state)
             if goal is not None:
@@ -577,8 +717,9 @@ class GCStatePlannerVectorField(nn.Module):
         else:
             inputs = jnp.concatenate([current_state, goal, waypoints, times], axis=-1)
 
-        v = self.mlp(inputs)
-        return v
+        drift = self.mlp(inputs)
+        return drift
+
 
 class UnconditionalEmbedding(nn.Module):
     """Unconditional embedding module."""
