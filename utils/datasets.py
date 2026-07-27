@@ -206,69 +206,6 @@ class GCDataset:
                 stacked_observations = self.get_stacked_observations(np.arange(self.size))
                 self.dataset = Dataset(self.dataset.copy(dict(observations=stacked_observations)))
 
-    def tvl_sample(self, batch_size: int, idxs=None, evaluation=False):
-        if idxs is None:
-            idxs = self.dataset.get_random_idxs(batch_size)
-
-        batch = self.dataset.sample(batch_size, idxs)
-        if self.config['frame_stack'] is not None:
-            batch['observations'] = self.get_observations(idxs)
-            batch['next_observations'] = self.get_observations(idxs + 1)
-
-        value_goal_idxs = self.sample_goals(
-            idxs,
-            self.config['value_p_curgoal'],
-            self.config['value_p_trajgoal'],
-            self.config['value_p_randomgoal'],
-            self.config['value_geom_sample'],
-        )
-        actor_goal_idxs = self.sample_goals(
-            idxs,
-            self.config['actor_p_curgoal'],
-            self.config['actor_p_trajgoal'],
-            self.config['actor_p_randomgoal'],
-            self.config['actor_geom_sample'],
-        )
-
-        successes = (idxs == value_goal_idxs).astype(float)
-        batch['masks'] = 1.0 - successes
-        batch['rewards'] = successes - (1.0 if self.config['gc_negative'] else 0.0)
-        
-        actor_successes = (idxs == actor_goal_idxs).astype(float)
-        batch['actor_masks'] = 1.0 - actor_successes
-        batch['actor_rewards'] = actor_successes - (1.0 if self.config['gc_negative'] else 0.0)
-
-        # get waypoints and random waypoints
-        final_state_idxs = self.terminal_locs[np.searchsorted(self.terminal_locs, idxs)]
-        valid_j_idxs = np.maximum(idxs, np.minimum(value_goal_idxs, final_state_idxs))
-
-        rand_floats = np.random.rand(batch_size)
-        waypoint_idxs = idxs + rand_floats * (valid_j_idxs - idxs)
-        waypoint_idxs = np.round(waypoint_idxs).astype(int)
-
-        random_waypoint_idxs = self.dataset.get_random_idxs(batch_size)
-
-        if 'oracle_reps' in self.dataset:
-            batch['value_goals'] = self.dataset['oracle_reps'][value_goal_idxs]
-            batch['actor_goals'] = self.dataset['oracle_reps'][actor_goal_idxs]
-            batch['waypoints'] = self.get_observations(waypoint_idxs)
-            batch['random_waypoints'] = self.get_observations(random_waypoint_idxs)
-            batch['2d_waypoints'] = self.dataset['oracle_reps'][waypoint_idxs]
-            batch['2d_random_waypoints'] = self.dataset['oracle_reps'][random_waypoint_idxs]
-        else:
-            batch['value_goals'] = self.get_observations(value_goal_idxs)
-            batch['actor_goals'] = self.get_observations(actor_goal_idxs)
-            batch['waypoints'] = self.get_observations(waypoint_idxs)
-            batch['random_waypoints'] = self.get_observations(random_waypoint_idxs)
-            batch['2d_waypoints'] = self.get_observations(waypoint_idxs)
-            batch['2d_random_waypoints'] = self.get_observations(random_waypoint_idxs)
-
-        if self.config['p_aug'] is not None and not evaluation:
-            if np.random.rand() < self.config['p_aug']:
-                self.augment(batch, ['observations', 'next_observations', 'value_goals', 'actor_goals'])
-
-        return batch
-
     def sample(self, batch_size: int, idxs=None, evaluation=False):
         """Sample a batch of transitions with goals.
 
