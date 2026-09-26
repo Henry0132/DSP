@@ -2,8 +2,6 @@
   
 <h1>Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning</h1>
 
-<p><strong>NeurIPS 2026</strong></p>
-
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
 [![JAX](https://img.shields.io/badge/JAX-0.4.26+-yellow.svg)](https://github.com/google/jax)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
