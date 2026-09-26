@@ -4,11 +4,6 @@
 
 <p><strong>NeurIPS 2026</strong></p>
 
-<p>Hengrui Zhang<sup>1</sup>, Yuhu Cheng<sup>1</sup>, C. L. Philip Chen<sup>2</sup>, Xuesong Wang<sup>1,*</sup></p>
-<p><sup>1</sup> School of Information and Control Engineering, China University of Mining and Technology<br>
-<sup>2</sup> School of Computer Science and Engineering, South China University of Technology</p>
-<p><sup>*</sup> Corresponding author</p>
-
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
 [![JAX](https://img.shields.io/badge/JAX-0.4.26+-yellow.svg)](https://github.com/google/jax)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
