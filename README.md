@@ -1,6 +1,13 @@
 <div align="center">
   
-  # Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning
+<h1>Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning</h1>
+
+<p><strong>NeurIPS 2026</strong></p>
+
+<p>Hengrui Zhang<sup>1</sup>, Yuhu Cheng<sup>1</sup>, C. L. Philip Chen<sup>2</sup>, Xuesong Wang<sup>1,*</sup></p>
+<p><sup>1</sup> School of Information and Control Engineering, China University of Mining and Technology<br>
+<sup>2</sup> School of Computer Science and Engineering, South China University of Technology</p>
+<p><sup>*</sup> Corresponding author</p>
 
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/)
 [![JAX](https://img.shields.io/badge/JAX-0.4.26+-yellow.svg)](https://github.com/google/jax)
@@ -84,11 +91,11 @@ python main.py --run_group EXP --seed 0 --env_name antmaze-large-diverse-v2 --al
 If you use this code in your research, please cite our paper:
 
 ```bibtex
-@article{neurips2026submission,
-  title={Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning},
-  author={Anonymous Authors},
-  journal={},
-  year={2026}
+@inproceedings{zhang2026dsp,
+  title = {Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning},
+  author = {Zhang, Hengrui and Cheng, Yuhu and Chen, C. L. Philip and Wang, Xuesong},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year = {2026}
 }
 ```
 
@@ -103,4 +110,4 @@ This project is licensed under the MIT License
 
 ## 📞 Contact
 
-For any questions or issues, please contact: anon.email@domain.com
+For questions about this project, please contact Hengrui Zhang at [hengruizhang@cumt.edu.cn](mailto:hengruizhang@cumt.edu.cn).
