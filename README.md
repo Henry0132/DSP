@@ -100,7 +100,3 @@ We thank the authors for providing open-source implementations and benchmarks th
 ## 📜 License
 
 This project is licensed under the MIT License
-
-## 📞 Contact
-
-For questions about this project, please contact Hengrui Zhang at [hengruizhang@cumt.edu.cn](mailto:hengruizhang@cumt.edu.cn).
