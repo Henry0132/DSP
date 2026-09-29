@@ -84,11 +84,11 @@ python main.py --run_group EXP --seed 0 --env_name antmaze-large-diverse-v2 --al
 If you use this code in your research, please cite our paper:
 
 ```bibtex
-@inproceedings{zhang2026dsp,
-  title = {Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning},
-  author = {Zhang, Hengrui and Cheng, Yuhu and Chen, C. L. Philip and Wang, Xuesong},
-  booktitle = {Advances in Neural Information Processing Systems},
-  year = {2026}
+@article{zhang2026dsp,
+  title={Diffusion Subgoal Planning for Long-Horizon Offline Goal-Conditioned Reinforcement Learning},
+  author={Zhang, Hengrui and Cheng, Yuhu and Chen, C. L. Philip and Wang, Xuesong},
+  journal={arXiv preprint arXiv:2609.34575},
+  year={2026}
 }
 ```
 
