@@ -81,7 +81,7 @@ python main.py --run_group EXP --seed 0 --env_name antmaze-large-diverse-v2 --al
 
 ## 📝 Citation
 
-If you use this code in your research, please cite our paper:
+If you find this work useful, please consider citing our paper:
 
 ```bibtex
 @article{zhang2026dsp,
