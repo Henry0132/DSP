@@ -330,7 +330,8 @@ class DSPAgent(flax.struct.PyTreeNode):
 
         if not self.config['discrete']:
             actions = jnp.clip(actions, -1, 1)
-        return actions, subgoal
+        return actions
+        # return actions, subgoal
 
 
     @classmethod
