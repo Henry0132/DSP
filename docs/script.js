@@ -14,25 +14,17 @@ if (navigator.clipboard && window.isSecureContext) {
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-// Official OGBench dataset clips; the original photographs remain underneath.
+// Benchmark environment demonstrations; the original photographs remain underneath.
 function setupEnvironmentDemos() {
   const videos = [...document.querySelectorAll('.environment-gallery video')];
-  const button = document.querySelector('#toggle-environments');
   const visible = new Set();
-  let playing = !reducedMotion.matches;
 
   function sync() {
-    button.textContent = playing ? 'Pause demos' : 'Play demos';
     for (const video of videos) {
-      if (playing && visible.has(video) && !document.hidden && !video.dataset.failed) {
+      if (!reducedMotion.matches && visible.has(video) && !document.hidden && !video.dataset.failed) {
         if (!video.hasAttribute('src')) video.src = video.dataset.src;
         if (video.paused) {
-          video.play().catch(error => {
-            if (error.name === 'NotAllowedError') {
-              playing = false;
-              sync();
-            }
-          });
+          video.play().catch(() => { /* Keep the poster if autoplay is blocked. */ });
         }
       } else {
         video.pause();
@@ -55,12 +47,8 @@ function setupEnvironmentDemos() {
     sync();
   }, { threshold: 0.1 });
   videos.forEach(video => observer.observe(video));
-  button.hidden = false;
-  button.addEventListener('click', () => { playing = !playing; sync(); });
   document.addEventListener('visibilitychange', sync);
-  reducedMotion.addEventListener('change', () => {
-    if (reducedMotion.matches) { playing = false; sync(); }
-  });
+  reducedMotion.addEventListener('change', sync);
   sync();
 }
 

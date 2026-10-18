@@ -74,7 +74,9 @@ def build(figure_dir, name, expected_count, output):
                 annotation_root = ET.fromstring(annotated[0].get_svg_image())
                 box = [e for e in annotation_root.iter() if e.get("fill") == "#e52237"]
                 assert len(box) == 1
+                # Markers 12 and 13 overlap inside this box; reveal it at marker 13.
                 group = ET.SubElement(root, f"{{{SVG}}}g", {
+                    "data-step": "13", "data-annotation": "cluster",
                     "transform": f"scale({page.rect.width / annotated[0].rect.width} {page.rect.height / annotated[0].rect.height})"})
                 group.append(copy.deepcopy(box[0]))
 
