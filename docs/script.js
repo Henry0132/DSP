@@ -14,44 +14,6 @@ if (navigator.clipboard && window.isSecureContext) {
 
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-// Benchmark environment demonstrations; the original photographs remain underneath.
-function setupEnvironmentDemos() {
-  const videos = [...document.querySelectorAll('.environment-gallery video')];
-  const visible = new Set();
-
-  function sync() {
-    for (const video of videos) {
-      if (!reducedMotion.matches && visible.has(video) && !document.hidden && !video.dataset.failed) {
-        if (!video.hasAttribute('src')) video.src = video.dataset.src;
-        if (video.paused) {
-          video.play().catch(() => { /* Keep the poster if autoplay is blocked. */ });
-        }
-      } else {
-        video.pause();
-      }
-    }
-  }
-
-  for (const video of videos) {
-    video.addEventListener('playing', () => video.classList.add('is-ready'));
-    video.addEventListener('error', () => {
-      video.dataset.failed = 'true';
-      video.classList.remove('is-ready');
-    });
-  }
-  const observer = new IntersectionObserver(entries => {
-    for (const entry of entries) {
-      if (entry.isIntersecting) visible.add(entry.target);
-      else visible.delete(entry.target);
-    }
-    sync();
-  }, { threshold: 0.1 });
-  videos.forEach(video => observer.observe(video));
-  document.addEventListener('visibilitychange', sync);
-  reducedMotion.addEventListener('change', sync);
-  sync();
-}
-
 // Reveal the PDF's numbered subgoals. Equal step timing is illustrative only.
 function setupPlanningAnimation() {
   const section = document.querySelector('.planning');
@@ -111,7 +73,7 @@ function setupPlanningAnimation() {
       figures = svgs.map(svg => ({ svg, layers: [...svg.querySelectorAll('[data-step]')],
                                   count: Number(svg.dataset.subgoalCount) }));
       renderedStep = null;
-      cycleMs = Math.max(...figures.map(figure => figure.count)) * stepMs + 1800;
+      cycleMs = Math.max(...figures.map(figure => figure.count)) * stepMs + 3000;
       svgs.forEach((svg, index) => links[index].replaceChildren(svg));
       document.querySelector('#planning-controls').hidden = false;
       showStep(playing ? 0 : Infinity);
@@ -182,7 +144,6 @@ async function loadVisitStats() {
 }
 
 if ('IntersectionObserver' in window) {
-  setupEnvironmentDemos();
   setupPlanningAnimation();
 }
 loadVisitStats();

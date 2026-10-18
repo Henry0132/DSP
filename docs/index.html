@@ -8,8 +8,8 @@
   <title>DSP | Diffusion Subgoal Planning · NeurIPS 2026</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="ogbench-template.css">
-  <link rel="stylesheet" href="style.css">
-  <script src="script.js?v=motion2" defer></script>
+  <link rel="stylesheet" href="style.css?v=gif3">
+  <script src="script.js?v=gif3" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#overview">Skip to content</a>
@@ -36,13 +36,13 @@
 
     <figure class="environment-teaser" aria-label="Selected evaluation environments from the paper">
       <div class="environment-gallery">
-        <figure><a class="environment-media" href="assets/environments/antmaze-giant-v0.jpg" target="_blank" rel="noopener" aria-label="Open AntMaze Giant environment image"><img src="assets/environments/antmaze-giant-v0.jpg" alt="Overhead view of the AntMaze Giant navigation environment." width="1018" height="1018"><video muted loop playsinline preload="none" data-src="https://seohong.me/projects/ogbench/assets/videos/antmaze-giant-navigate-v0_data.mp4" aria-label="Official OGBench environment demonstration"></video></a><figcaption>AntMaze Giant</figcaption></figure>
-        <figure><a class="environment-media" href="assets/environments/antsoccer-arena-v0.jpg" target="_blank" rel="noopener" aria-label="Open AntSoccer Arena environment image"><img src="assets/environments/antsoccer-arena-v0.jpg" alt="Ant robot and ball in the AntSoccer Arena environment." width="1024" height="1024"><video muted loop playsinline preload="none" data-src="https://seohong.me/projects/ogbench/assets/videos/antsoccer-arena-stitch-v0_data.mp4" aria-label="Official OGBench environment demonstration"></video></a><figcaption>AntSoccer Arena</figcaption></figure>
-        <figure><a class="environment-media" href="assets/environments/cube-double-v0.jpg" target="_blank" rel="noopener" aria-label="Open Cube Double environment image"><img src="assets/environments/cube-double-v0.jpg" alt="Robot arm and two cubes in the Cube Double manipulation environment." width="1018" height="1018"><video muted loop playsinline preload="none" data-src="https://chongyi-zheng.github.io/assets/papers/infom/videos/cube-double-v0_task5.mp4" aria-label="Cube Double environment demonstration from InFOM"></video></a><figcaption>Cube Double</figcaption></figure>
-        <figure><a class="environment-media" href="assets/environments/scene-v0.jpg" target="_blank" rel="noopener" aria-label="Open Scene environment image"><img src="assets/environments/scene-v0.jpg" alt="Robot arm with a cube, drawer, window, and buttons in the Scene environment." width="1024" height="1024"><video muted loop playsinline preload="none" data-src="https://seohong.me/projects/ogbench/assets/videos/scene-v0_data.mp4" aria-label="Official OGBench environment demonstration"></video></a><figcaption>Scene</figcaption></figure>
-        <figure><a class="environment-media" href="assets/environments/puzzle-4x4-v0.jpg" target="_blank" rel="noopener" aria-label="Open Puzzle 4 by 4 environment image"><img src="assets/environments/puzzle-4x4-v0.jpg" alt="Robot arm above the colored button grid of the Puzzle 4 by 4 environment." width="1017" height="1018"><video muted loop playsinline preload="none" data-src="https://seohong.me/projects/ogbench/assets/videos/visual-puzzle-4x4-v0_data.mp4" aria-label="Official OGBench environment demonstration"></video></a><figcaption>Puzzle 4 × 4</figcaption></figure>
+        <figure><a class="environment-media" href="assets/environments/antmaze-giant-v0.gif" target="_blank" rel="noopener" aria-label="Open AntMaze Giant environment animation"><img src="assets/environments/antmaze-giant-v0.gif" alt="Overhead view of the AntMaze Giant navigation environment." width="320" height="320"></a><figcaption>AntMaze Giant</figcaption></figure>
+        <figure><a class="environment-media" href="assets/environments/antsoccer-arena-v0.gif" target="_blank" rel="noopener" aria-label="Open AntSoccer Arena environment animation"><img src="assets/environments/antsoccer-arena-v0.gif" alt="Ant robot and ball in the AntSoccer Arena environment." width="320" height="320"></a><figcaption>AntSoccer Arena</figcaption></figure>
+        <figure><a class="environment-media" href="assets/environments/cube-double-v0.gif" target="_blank" rel="noopener" aria-label="Open Cube Double environment animation"><img src="assets/environments/cube-double-v0.gif" alt="Robot arm and two cubes in the Cube Double manipulation environment." width="320" height="320"></a><figcaption>Cube Double</figcaption></figure>
+        <figure><a class="environment-media" href="assets/environments/scene-v0.gif" target="_blank" rel="noopener" aria-label="Open Scene environment animation"><img src="assets/environments/scene-v0.gif" alt="Robot arm with a cube, drawer, window, and buttons in the Scene environment." width="320" height="320"></a><figcaption>Scene</figcaption></figure>
+        <figure><a class="environment-media" href="assets/environments/puzzle-4x4-v0.gif" target="_blank" rel="noopener" aria-label="Open Puzzle 4 by 4 environment animation"><img src="assets/environments/puzzle-4x4-v0.gif" alt="Robot arm above the colored button grid of the Puzzle 4 by 4 environment." width="320" height="320"></a><figcaption>Puzzle 4 × 4</figcaption></figure>
       </div>
-      <figcaption>Selected OGBench evaluation environments. Video sources: <a href="https://seohong.me/projects/ogbench/" target="_blank" rel="noopener noreferrer">OGBench</a> and <a href="https://chongyi-zheng.github.io/infom/" target="_blank" rel="noopener noreferrer">InFOM (Cube Double)</a>.</figcaption>
+      <figcaption>Selected OGBench evaluation environments: maze navigation, ball control, cube manipulation, scene interaction, and puzzle solving.</figcaption>
     </figure>
 
     <section class="overview" id="overview" aria-labelledby="overview-title">
@@ -59,7 +59,7 @@
       <div class="section-heading"><h2 id="planning-title">Subgoal Planning</h2><span>AntMaze Giant</span></div>
       <figure>
         <div class="comparison">
-          <div class="plot"><h3>HIQL<sup>w/o</sup></h3><a class="planning-image" data-planning-src="assets/hiql-planning-steps.svg?v=cluster" href="assets/hiql-planning-annotated.png" target="_blank" rel="noopener" aria-label="Open full-size HIQL planning figure"><img src="assets/hiql-planning-annotated.png" alt="HIQL without subgoal representation in AntMaze Giant, with the paper’s red box marking a cluster of subgoals along the plan." width="1800" height="1273" loading="lazy"></a></div>
+          <div class="plot"><h3>HIQL<sup>w/o</sup></h3><a class="planning-image" data-planning-src="assets/hiql-planning-steps.svg?v=cluster-end" href="assets/hiql-planning-annotated.png" target="_blank" rel="noopener" aria-label="Open full-size HIQL planning figure"><img src="assets/hiql-planning-annotated.png" alt="HIQL without subgoal representation in AntMaze Giant, with the paper’s red box marking a cluster of subgoals along the plan." width="1800" height="1273" loading="lazy"></a></div>
           <div class="plot"><h3 class="accent">DSP <span>Ours</span></h3><a class="planning-image" data-planning-src="assets/dsp-planning-steps.svg" href="assets/dsp-planning.png" target="_blank" rel="noopener" aria-label="Open full-size DSP planning figure"><img src="assets/dsp-planning.png" alt="DSP: a numbered subgoal sequence extends through the AntMaze Giant maze toward the marked goal, overlaid on a value heatmap for visualization." width="1800" height="1337" loading="lazy"></a></div>
         </div>
         <div class="media-controls" id="planning-controls" hidden><button id="toggle-planning" type="button">Pause</button><button id="replay-planning" type="button">Replay</button><button id="show-full-planning" type="button">Show full plan</button></div>
