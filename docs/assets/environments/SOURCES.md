@@ -10,7 +10,7 @@ The GIFs preserve each source clip's duration and sequence, converted to 320 × 
 | `antsoccer-arena-v0.gif` | [OGBench](https://seohong.me/projects/ogbench/assets/videos/antsoccer-arena-stitch-v0_data.mp4) |
 | `cube-double-v0.gif` | [InFOM](https://chongyi-zheng.github.io/assets/papers/infom/videos/cube-double-v0_task5.mp4) |
 | `scene-v0.gif` | [OGBench](https://seohong.me/projects/ogbench/assets/videos/scene-v0_data.mp4) |
-| `puzzle-4x4-v0.gif` | [OGBench](https://seohong.me/projects/ogbench/assets/videos/visual-puzzle-4x4-v0_data.mp4) |
+| `puzzle-4x4-v0.gif` | [InFOM](https://chongyi-zheng.github.io/assets/papers/infom/videos/puzzle-4x4-v0_data.mp4) |
 
 Project pages: [OGBench](https://seohong.me/projects/ogbench/),
 [InFOM](https://chongyi-zheng.github.io/infom/).

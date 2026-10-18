@@ -74,10 +74,10 @@ def build(figure_dir, name, expected_count, output):
                 annotation_root = ET.fromstring(annotated[0].get_svg_image())
                 box = [e for e in annotation_root.iter() if e.get("fill") == "#e52237"]
                 assert len(box) == 1
-                # Reveal the box three playback steps after the final subgoal.
-                # At 240 ms per step this leaves a 720 ms pause before annotation.
+                # Subgoals 12–18 form the local cluster; 19 moves away from it.
+                # Reveal the annotation only after that local sequence is complete.
                 group = ET.SubElement(root, f"{{{SVG}}}g", {
-                    "data-step": str(expected_count + 2), "data-annotation": "cluster",
+                    "data-step": "19", "data-annotation": "cluster",
                     "transform": f"scale({page.rect.width / annotated[0].rect.width} {page.rect.height / annotated[0].rect.height})"})
                 group.append(copy.deepcopy(box[0]))
 
